@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PhotoFix — Free Photo Resizer & Background Changer</title>
+<meta name="description" content="Resize photo to any KB size free. Change background color free. No login, no watermark. Best for SSC, Railway, UPSC forms.">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800;900&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #07080f;
+    --surface: #0f1120;
+    --border: rgba(255,255,255,0.07);
+    --accent: #ff6b35;
+    --accent2: #ff3d71;
+    --accent3: #00d4ff;
+    --text: #f0f0f0;
+    --muted: #5a5f7a;
+    --card: #111827;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Animated background */
+  body::before {
+    content: '';
+    position: fixed;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: 
+      radial-gradient(ellipse 600px 400px at 20% 20%, rgba(255,107,53,0.08) 0%, transparent 60%),
+      radial-gradient(ellipse 500px 300px at 80% 80%, rgba(0,212,255,0.07) 0%, transparent 60%),
+      radial-gradient(ellipse 400px 400px at 50% 50%, rgba(255,61,113,0.05) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+    animation: bgPulse 8s ease-in-out infinite alternate;
+  }
+
+  @keyframes bgPulse {
+    0% { transform: scale(1) rotate(0deg); opacity: 0.8; }
+    100% { transform: scale(1.05) rotate(1deg); opacity: 1; }
+  }
+
+  .container {
+    max-width: 560px;
+    margin: 0 auto;
+    padding: 24px 16px 80px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Header */
+  .header {
+    text-align: center;
+    padding: 40px 0 36px;
+    animation: slideDown 0.6s ease;
+  }
+
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255,107,53,0.12);
+    border: 1px solid rgba(255,107,53,0.3);
+    border-radius: 100px;
+    padding: 5px 14px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  .badge::before { content: '●'; font-size: 8px; animation: blink 1.5s infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(42px, 10vw, 62px);
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: -2px;
+    margin-bottom: 8px;
+  }
+
+  h1 span.fix {
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .tagline {
+    color: var(--muted);
+    font-size: 14px;
+    font-weight: 500;
+    margin-top: 10px;
+  }
+
+  .tagline strong { color: var(--text); }
+
+  /* Mode tabs */
+  .tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 5px;
+    margin-bottom: 20px;
+    animation: fadeUp 0.5s ease 0.1s both;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .tab {
+    padding: 13px;
+    border-radius: 12px;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.25s;
+  }
+
+  .tab.active {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #fff;
+    box-shadow: 0 4px 20px rgba(255,107,53,0.35);
+  }
+
+  /* Card */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 20px;
+    margin-bottom: 14px;
+    animation: fadeUp 0.5s ease 0.2s both;
+  }
+
+  .card-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--muted);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+
+  /* Upload zone */
+  .upload-zone {
+    border: 2px dashed var(--border);
+    border-radius: 16px;
+    padding: 36px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.25s;
+    margin-bottom: 14px;
+    position: relative;
+    overflow: hidden;
+    animation: fadeUp 0.5s ease 0.15s both;
+  }
+
+  .upload-zone:hover, .upload-zone.drag {
+    border-color: var(--accent);
+    background: rgba(255,107,53,0.04);
+  }
+
+  .upload-zone input { display: none; }
+
+  .upload-icon {
+    font-size: 40px;
+    margin-bottom: 10px;
+    display: block;
+  }
+
+  .upload-text {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+
+  .upload-sub {
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .preview-img {
+    max-height: 180px;
+    max-width: 100%;
+    border-radius: 10px;
+    display: block;
+    margin: 0 auto 8px;
+    object-fit: contain;
+  }
+
+  .change-hint {
+    font-size: 12px;
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  /* KB presets */
+  .kb-presets {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+  }
+
+  .kb-btn {
+    padding: 8px 16px;
+    border-radius: 10px;
+    border: 1.5px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .kb-btn.selected {
+    border-color: var(--accent);
+    background: rgba(255,107,53,0.12);
+    color: var(--accent);
+  }
+
+  .custom-kb-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .custom-input {
+    flex: 1;
+    padding: 11px 14px;
+    border-radius: 10px;
+    border: 1.5px solid var(--border);
+    background: rgba(255,255,255,0.04);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    outline: none;
+    transition: border 0.2s;
+  }
+
+  .custom-input:focus { border-color: var(--accent); }
+  .custom-input::placeholder { color: var(--muted); }
+
+  .kb-label {
+    color: var(--muted);
+    font-weight: 700;
+    font-size: 14px;
+    min-width: 24px;
+  }
+
+  .kb-hint {
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--accent);
+    font-weight: 600;
+    min-height: 18px;
+  }
+
+  /* BG colors */
+  .bg-grid {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+  }
+
+  .bg-swatch {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    border: 2.5px solid transparent;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+
+  .bg-swatch.selected {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(255,107,53,0.4);
+  }
+
+  .bg-swatch .check {
+    position: absolute;
+    top: -5px; right: -5px;
+    width: 16px; height: 16px;
+    background: var(--accent);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 9px;
+    color: #fff;
+  }
+
+  .custom-color-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 4px;
+  }
+
+  .custom-color-input {
+    width: 42px; height: 42px;
+    border-radius: 10px;
+    border: 2px solid var(--border);
+    background: none;
+    cursor: pointer;
+    padding: 2px;
+  }
+
+  .custom-color-label {
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  /* Process button */
+  .process-btn {
+    width: 100%;
+    padding: 17px;
+    border-radius: 14px;
+    border: none;
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+    color: #fff;
+    font-family: 'Syne', sans-serif;
+    font-size: 17px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: all 0.25s;
+    box-shadow: 0 8px 30px rgba(255,107,53,0.35);
+    margin-bottom: 14px;
+    animation: fadeUp 0.5s ease 0.3s both;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .process-btn::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(255,255,255,0);
+    transition: background 0.2s;
+  }
+
+  .process-btn:hover::after { background: rgba(255,255,255,0.08); }
+  .process-btn:active { transform: scale(0.98); }
+
+  .process-btn:disabled {
+    background: var(--surface);
+    color: var(--muted);
+    box-shadow: none;
+    cursor: not-allowed;
+  }
+
+  /* Output */
+  .output-card {
+    background: rgba(0,212,255,0.04);
+    border: 1.5px solid rgba(0,212,255,0.2);
+    border-radius: 20px;
+    padding: 20px;
+    text-align: center;
+    animation: popIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  }
+
+  @keyframes popIn {
+    from { opacity: 0; transform: scale(0.92) translateY(10px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+  }
+
+  .output-img {
+    max-height: 200px;
+    max-width: 100%;
+    border-radius: 12px;
+    object-fit: contain;
+    display: block;
+    margin: 0 auto 14px;
+  }
+
+  .size-badge {
+    display: inline-block;
+    background: rgba(0,212,255,0.12);
+    border: 1px solid rgba(0,212,255,0.3);
+    color: var(--accent3);
+    border-radius: 8px;
+    padding: 4px 14px;
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 14px;
+  }
+
+  .download-btn {
+    display: block;
+    width: 100%;
+    padding: 15px;
+    border-radius: 12px;
+    border: none;
+    background: linear-gradient(135deg, #00c875, #00a8d4);
+    color: #fff;
+    font-family: 'Syne', sans-serif;
+    font-size: 16px;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 6px 24px rgba(0,200,117,0.3);
+    transition: all 0.2s;
+  }
+
+  .download-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 30px rgba(0,200,117,0.4); }
+  .download-btn:active { transform: scale(0.98); }
+
+  /* Loading spinner */
+  .spinner {
+    display: inline-block;
+    width: 18px; height: 18px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    vertical-align: middle;
+    margin-right: 8px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Features strip */
+  .features {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 20px;
+    animation: fadeUp 0.5s ease 0.05s both;
+  }
+
+  .feature {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 8px;
+    text-align: center;
+  }
+
+  .feature-icon { font-size: 22px; margin-bottom: 4px; }
+  .feature-text { font-size: 11px; color: var(--muted); font-weight: 500; line-height: 1.3; }
+
+  /* Footer */
+  footer {
+    text-align: center;
+    padding: 30px 0 10px;
+    color: var(--muted);
+    font-size: 11px;
+    line-height: 2;
+  }
+
+  canvas { display: none; }
+
+  /* Divider */
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 14px 0;
+  }
+</style>
+</head>
+<body>
+
+<canvas id="canvas"></canvas>
+
+<div class="container">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="badge">Free Tool</div>
+    <h1>Photo<span class="fix">Fix</span></h1>
+    <p class="tagline">Resize to <strong>any KB</strong> • Change <strong>Background</strong> • Instant Download</p>
+  </div>
+
+  <!-- Features -->
+  <div class="features">
+    <div class="feature">
+      <div class="feature-icon">🎯</div>
+      <div class="feature-text">Exact KB Size</div>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">🎨</div>
+      <div class="feature-text">BG Change</div>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">⚡</div>
+      <div class="feature-text">No Login</div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab active" id="tab-resize" onclick="setMode('resize')">📐 Resize to KB</button>
+    <button class="tab" id="tab-bg" onclick="setMode('bg')">🎨 Change BG</button>
+  </div>
+
+  <!-- Upload -->
+  <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()"
+    ondragover="event.preventDefault(); this.classList.add('drag')"
+    ondragleave="this.classList.remove('drag')"
+    ondrop="handleDrop(event)">
+    <input type="file" id="fileInput" accept="image/*" onchange="handleFile(this.files[0])">
+    <div id="uploadContent">
+      <span class="upload-icon">📸</span>
+      <p class="upload-text">Tap to upload photo</p>
+      <p class="upload-sub">JPG, PNG, WEBP — any format</p>
+    </div>
+  </div>
+
+  <!-- Resize Options -->
+  <div class="card" id="resizeCard">
+    <div class="card-title">Target File Size</div>
+    <div class="kb-presets">
+      <button class="kb-btn selected" onclick="selectKB(20, this)">20 KB</button>
+      <button class="kb-btn" onclick="selectKB(50, this)">50 KB</button>
+      <button class="kb-btn" onclick="selectKB(100, this)">100 KB</button>
+      <button class="kb-btn" onclick="selectKB(200, this)">200 KB</button>
+    </div>
+    <div class="custom-kb-wrap">
+      <input class="custom-input" type="number" id="customKB" min="1" max="9999" placeholder="Custom — e.g. 37" oninput="onCustomKB()">
+      <span class="kb-label">KB</span>
+    </div>
+    <div class="kb-hint" id="kbHint">✓ Will compress to ≈ 20 KB</div>
+  </div>
+
+  <!-- BG Options -->
+  <div class="card" id="bgCard" style="display:none">
+    <div class="card-title">New Background Color</div>
+    <div class="bg-grid" id="bgGrid">
+      <div class="bg-swatch selected" style="background:#ffffff; border-color:#ddd" onclick="selectBG('#ffffff', this)" title="White"><span class="check">✓</span></div>
+      <div class="bg-swatch" style="background:#1a56db" onclick="selectBG('#1a56db', this)" title="Blue"></div>
+      <div class="bg-swatch" style="background:#e02424" onclick="selectBG('#e02424', this)" title="Red"></div>
+      <div class="bg-swatch" style="background:#9ca3af" onclick="selectBG('#9ca3af', this)" title="Grey"></div>
+      <div class="bg-swatch" style="background:#fbbf24" onclick="selectBG('#fbbf24', this)" title="Yellow"></div>
+      <div class="bg-swatch" style="background:#111827" onclick="selectBG('#111827', this)" title="Black"></div>
+      <div class="bg-swatch" style="background:#057a55" onclick="selectBG('#057a55', this)" title="Green"></div>
+      <div class="bg-swatch" style="background: repeating-conic-gradient(#888 0% 25%, #ccc 0% 50%) 0 0/14px 14px" onclick="selectBG('transparent', this)" title="Remove BG"></div>
+    </div>
+    <div class="custom-color-row">
+      <input type="color" class="custom-color-input" id="customColor" value="#ffffff" oninput="selectBG(this.value, null, true)">
+      <span class="custom-color-label">Pick any custom color</span>
+    </div>
+  </div>
+
+  <!-- Process Button -->
+  <button class="process-btn" id="processBtn" onclick="processImage()" disabled>
+    🚀 Compress to 20 KB
+  </button>
+
+  <!-- Output -->
+  <div id="outputSection" style="display:none"></div>
+
+  <footer>
+    100% Free &nbsp;•&nbsp; No Login &nbsp;•&nbsp; No Watermark<br>
+    Your photo never leaves your phone — 100% private<br>
+    <strong style="color:#444">PhotoFix</strong> — Made with ❤️ for India
+  </footer>
+
+</div>
+
+<script>
+  let mode = 'resize';
+  let targetKB = 20;
+  let bgColor = '#ffffff';
+  let uploadedImg = null;
+  let uploadedFile = null;
+
+  function setMode(m) {
+    mode = m;
+    document.getElementById('tab-resize').className = 'tab' + (m === 'resize' ? ' active' : '');
+    document.getElementById('tab-bg').className = 'tab' + (m === 'bg' ? ' active' : '');
+    document.getElementById('resizeCard').style.display = m === 'resize' ? 'block' : 'none';
+    document.getElementById('bgCard').style.display = m === 'bg' ? 'block' : 'none';
+    updateBtn();
+    document.getElementById('outputSection').style.display = 'none';
+  }
+
+  function selectKB(val, btn) {
+    targetKB = val;
+    document.getElementById('customKB').value = '';
+    document.querySelectorAll('.kb-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    document.getElementById('kbHint').textContent = '✓ Will compress to ≈ ' + val + ' KB';
+    updateBtn();
+  }
+
+  function onCustomKB() {
+    const val = parseInt(document.getElementById('customKB').value);
+    if (val > 0) {
+      targetKB = val;
+      document.querySelectorAll('.kb-btn').forEach(b => b.classList.remove('selected'));
+      document.getElementById('kbHint').textContent = '✓ Will compress to ≈ ' + val + ' KB';
+    }
+    updateBtn();
+  }
+
+  function selectBG(color, el, isCustom) {
+    bgColor = color;
+    document.querySelectorAll('.bg-swatch').forEach(s => {
+      s.classList.remove('selected');
+      const c = s.querySelector('.check');
+      if (c) c.remove();
+    });
+    if (el) {
+      el.classList.add('selected');
+      if (!el.querySelector('.check')) {
+        const chk = document.createElement('span');
+        chk.className = 'check';
+        chk.textContent = '✓';
+        el.appendChild(chk);
+      }
+    }
+    updateBtn();
+  }
+
+  function updateBtn() {
+    const btn = document.getElementById('processBtn');
+    if (!uploadedImg) {
+      btn.disabled = true;
+      btn.textContent = mode === 'resize' ? '🚀 Compress to ' + targetKB + ' KB' : '🎨 Apply Background';
+      return;
+    }
+    btn.disabled = false;
+    btn.innerHTML = mode === 'resize'
+      ? '🚀 Compress to ' + targetKB + ' KB'
+      : '🎨 Apply Background Change';
+  }
+
+  function handleDrop(e) {
+    e.preventDefault();
+    document.getElementById('uploadZone').classList.remove('drag');
+    const file = e.dataTransfer.files[0];
+    if (file) handleFile(file);
+  }
+
+  function handleFile(file) {
+    if (!file || !file.type.startsWith('image/')) return;
+    uploadedFile = file;
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      uploadedImg = img;
+      document.getElementById('uploadContent').innerHTML =
+        '<img class="preview-img" src="' + url + '">' +
+        '<p class="change-hint">✓ Photo uploaded — tap to change</p>';
+      document.getElementById('outputSection').style.display = 'none';
+      updateBtn();
+    };
+    img.src = url;
+  }
+
+  async function processImage() {
+    if (!uploadedImg) return;
+    const btn = document.getElementById('processBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>Processing...';
+
+    await new Promise(r => setTimeout(r, 40));
+
+    const canvas = document.getElementById('canvas');
+
+    if (mode === 'bg') {
+      canvas.width = uploadedImg.naturalWidth || uploadedImg.width;
+      canvas.height = uploadedImg.naturalHeight || uploadedImg.height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(uploadedImg, 0, 0);
+
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const data = imageData.data;
+      const w = canvas.width, h = canvas.height;
+
+      // Sample corners
+      const ci = [0, (w-1)*4, (h-1)*w*4, ((h-1)*w + w-1)*4];
+      let rS=0, gS=0, bS=0;
+      ci.forEach(i => { rS+=data[i]; gS+=data[i+1]; bS+=data[i+2]; });
+      const bgR=rS/4, bgG=gS/4, bgB=bS/4;
+      const thr = 65;
+
+      for (let i = 0; i < data.length; i += 4) {
+        if (Math.abs(data[i]-bgR)<thr && Math.abs(data[i+1]-bgG)<thr && Math.abs(data[i+2]-bgB)<thr) {
+          if (bgColor === 'transparent') {
+            data[i+3] = 0;
+          } else {
+            const h2 = bgColor.replace('#','');
+            data[i] = parseInt(h2.substr(0,2),16);
+            data[i+1] = parseInt(h2.substr(2,2),16);
+            data[i+2] = parseInt(h2.substr(4,2),16);
+            data[i+3] = 255;
+          }
+        }
+      }
+      ctx.putImageData(imageData, 0, 0);
+
+      const fmt = bgColor === 'transparent' ? 'image/png' : 'image/jpeg';
+      canvas.toBlob(blob => {
+        showOutput(blob, fmt === 'image/png' ? 'png' : 'jpg');
+      }, fmt, 0.95);
+
+    } else {
+      canvas.width = uploadedImg.naturalWidth || uploadedImg.width;
+      canvas.height = uploadedImg.naturalHeight || uploadedImg.height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(uploadedImg, 0, 0);
+
+      const blob = await compressToKB(canvas, targetKB);
+      showOutput(blob, 'jpg');
+    }
+  }
+
+  function compressToKB(canvas, targetKB) {
+    return new Promise(resolve => {
+      const target = targetKB * 1024;
+      let lo = 0.01, hi = 1.0, best = null;
+
+      const tryQ = q => new Promise(res => canvas.toBlob(b => res(b), 'image/jpeg', q));
+
+      (async () => {
+        for (let i = 0; i < 22; i++) {
+          const mid = (lo + hi) / 2;
+          const blob = await tryQ(mid);
+          if (!blob) break;
+          if (blob.size <= target) { best = blob; lo = mid; }
+          else hi = mid;
+          if (hi - lo < 0.004) break;
+        }
+        if (!best) best = await tryQ(lo);
+        resolve(best);
+      })();
+    });
+  }
+
+  function showOutput(blob, ext) {
+    const url = URL.createObjectURL(blob);
+    const sizeKB = (blob.size / 1024).toFixed(1);
+    const out = document.getElementById('outputSection');
+
+    const checkerBg = ext === 'png'
+      ? 'repeating-conic-gradient(#444 0% 25%, #222 0% 50%) 0 0/16px 16px'
+      : 'transparent';
+
+    out.innerHTML = `
+      <div class="output-card">
+        <img class="output-img" src="${url}" style="background:${checkerBg}">
+        <div class="size-badge">✓ File size: ${sizeKB} KB</div><br>
+        <button class="download-btn" onclick="downloadFile('${url}', 'photofix_${Date.now()}.${ext}')">
+          ⬇️ Download FREE — ${sizeKB} KB
+        </button>
+      </div>
+    `;
+    out.style.display = 'block';
+
+    const btn = document.getElementById('processBtn');
+    btn.disabled = false;
+    btn.innerHTML = mode === 'resize'
+      ? '🚀 Compress to ' + targetKB + ' KB'
+      : '🎨 Apply Background Change';
+
+    out.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function downloadFile(url, name) {
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = name;
+    a.click();
+  }
+</script>
+</body>
+</html>
